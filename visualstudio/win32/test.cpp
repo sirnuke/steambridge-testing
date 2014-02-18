@@ -95,7 +95,7 @@ bool Test::function_two(double param_one, void *param_two, float param_three)
     lea edx, param_one
     mov eax, [edx+4]
     push eax
-    mov eax, [edx]
+    mov eax, [edx+0]
     push eax
     // Get parent (new this)
     mov eax, [this]
@@ -104,7 +104,7 @@ bool Test::function_two(double param_one, void *param_two, float param_three)
     push eax
     // Get the vtable (pointer at this)
     mov eax, [eax]
-    // Lookup the first pointer in the vtable
+    // Lookup the pointer in the vtable
     mov eax, [eax+4]
     // Call that memory location
     call eax
@@ -164,7 +164,7 @@ unsigned __int64 Test::function_four()
     // get the result
     lea ecx, result
     mov [ecx+0], eax
-    mov [ecx+8], edx
+    mov [ecx+4], edx
     // cleanup the stack
     pop eax
   }
@@ -174,13 +174,13 @@ unsigned __int64 Test::function_four()
 float Test::function_five(__int64 param_one)
 {
   float result;
-  printf("(this=0x%p,parent=0x%p)\n", this, this->parent);
+  printf("(this=0x%p,parent=0x%p,%lli)\n", this, this->parent, param_one);
   __asm
   {
     lea edx, param_one
-    mov eax, [edx+0]
-    push eax
     mov eax, [edx+4]
+    push eax
+    mov eax, [edx+0]
     push eax
     // get parent
     mov eax, [this]
