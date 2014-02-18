@@ -38,18 +38,45 @@ def describe(type)
     data[:type] = 'const char'
     data[:const] = true
     data[:printf] = "\\\"%s\\\""
-    data[:size] = 1
+    data[:size] = BYTE_SIZE
+  when 'constint32'
+    data[:type] = 'const int32'
+    data[:const] = true
   when 'uint32'
     data[:printf] = "%u"
   when 'bool'
     data[:size] = BYTE_SIZE
+  when 'char'
+    data[:size] = BYTE_SIZE
+    data[:printf] = "%c"
   when 'uint8'
     data[:printf] = "%hhu"
     data[:size] = BYTE_SIZE
   when 'uint16'
     data[:printf] = "%hu"
     data[:size] = SHORT_SIZE
+  when 'int64'
+    data[:printf] = "%lli"
+    data[:size] = LONG_LONG_SIZE
   when 'SteamAPICall_t' # uint64
+    data[:printf] = "%llu"
+    data[:size] = LONG_LONG_SIZE
+  when 'CSteamID' # effective uint64
+    data[:printf] = "%llu"
+    data[:size] = LONG_LONG_SIZE
+  when 'AppId_t' #uint32
+    data[:printf] = "%u"
+  when 'UGCHandle_t' # uint64
+    data[:printf] = "%llu"
+    data[:size] = LONG_LONG_SIZE
+  when 'FriendGameInfo_t'
+    err "FriendGameInfo_t is expected to be a pointer" unless pointer or ppointer
+  when 'LeaderboardEntry_t'
+    err "LeaderboardEntry_t is expected to be a pointer" unless pointer or ppointer
+  when 'SteamLeaderboardEntries_t' # uin64
+    data[:printf] = "%llu"
+    data[:size] = LONG_LONG_SIZE
+  when 'SteamLeaderboard_t' # uint64
     data[:printf] = "%llu"
     data[:size] = LONG_LONG_SIZE
   when 'void'
@@ -65,6 +92,10 @@ def describe(type)
     data[:printf] = "%f"
     data[:size] = FLOAT_SIZE
     data[:float] = true
+  else
+    unless type.start_with? 'E' or type == 'int' or type == 'int32' 
+      warn "Possible unimplmented type of #{type}"
+    end
   end
   if pointer or ppointer
     data[:size] = POINTER_SIZE
