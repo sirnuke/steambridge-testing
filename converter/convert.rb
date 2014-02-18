@@ -14,6 +14,13 @@ class API
     @name = nil
     @args = []
     arg = nil
+    line.gsub!(/[\(\),;]/, ' ') # parans, commans, semicolons become a space
+    line.gsub!(/ \*/, '* ') # collapse xyz * types
+    line.gsub!(/\/\/.+/, '') # remove any trailing comments
+    line.gsub!(/ = 0/, '') # pure virtual marker
+    line.gsub!(/virtual /, '') # remove virtual
+    line.gsub!(/const /, 'const') # collapse const
+    puts "new line is #{line}"
     line.scan(/\S+/) do |token|
       token.sub!(/[\(\),]/, '')
       next if token.empty?
@@ -56,11 +63,15 @@ File.open(file, 'r') do |file|
   file.each_line do |line|
     num += 1
     line.strip!
+    next if line.start_with?('#') or line.start_with?('//')
     next if line.empty?
     if name.nil?
-      name = line
+      match = /class\s+(\w+)/.match(line)
+      name = match[1] if match
       next
     end
+    next if line.include?('{') or line == 'public:'
+    break if line.include?('}')
     apis << API.new(line, num)
   end
 end
