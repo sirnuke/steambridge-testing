@@ -1,3 +1,7 @@
 *.o
 .*.swp
 *.so
+visualstudio/ipch
+*.opensdf
+*.sdf
+*.suo
