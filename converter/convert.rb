@@ -8,7 +8,9 @@ VOID_SIZE = 0
 BYTE_SIZE = 1
 SHORT_SIZE = 2
 POINTER_SIZE = 4
+FLOAT_SIZE = 4
 INT_SIZE = 4
+DOUBLE_SIZE = 8
 LONG_LONG_SIZE = 8
 
 def err(msg)
@@ -55,9 +57,18 @@ def describe(type)
   when 'SteamAPIWarningMessageHook_t'
     data[:printf] = "0x%p"
     data[:size] = POINTER_SIZE
+  when 'double'
+    data[:printf] = "%f"
+    data[:size] = DOUBLE_SIZE
+    data[:float] = true
+  when 'float'
+    data[:printf] = "%f"
+    data[:size] = FLOAT_SIZE
+    data[:float] = true
   end
   if pointer or ppointer
     data[:size] = POINTER_SIZE
+    data[:float] = false
     data[:printf] = "0x%p" unless type.match(/^const/)
   end
   if ppointer
@@ -260,10 +271,6 @@ File.open(source, 'w') do |file|
         file.puts "#{INDENT}#{INDENT}mov ax, #{arg[:name]}"
         file.puts "#{INDENT}#{INDENT}push eax"
         stack += POINTER_SIZE
-      when POINTER_SIZE
-        file.puts "#{INDENT}#{INDENT}mov eax, #{arg[:name]}"
-        file.puts "#{INDENT}#{INDENT}push eax"
-        stack += POINTER_SIZE
       when INT_SIZE
         file.puts "#{INDENT}#{INDENT}mov eax, #{arg[:name]}"
         file.puts "#{INDENT}#{INDENT}push eax"
@@ -272,7 +279,7 @@ File.open(source, 'w') do |file|
         file.puts "#{INDENT}#{INDENT}lea edx, #{arg[:name]}"
         file.puts "#{INDENT}#{INDENT}mov eax, [edx+4]"
         file.puts "#{INDENT}#{INDENT}push eax"
-        file.puts "#{INDENT}#{INDENT}mov eax, [edx]"
+        file.puts "#{INDENT}#{INDENT}mov eax, [edx+0]"
         file.puts "#{INDENT}#{INDENT}push eax"
         stack += LONG_LONG_SIZE
       else
@@ -291,22 +298,24 @@ File.open(source, 'w') do |file|
     file.puts "#{INDENT}#{INDENT}// Call that memory location"
     file.puts "#{INDENT}#{INDENT}call eax"
     file.puts "#{INDENT}#{INDENT}// Move the returned value into the result"
-    case api.ret[:size]
-    when VOID_SIZE
-    when BYTE_SIZE
-      file.puts "#{INDENT}#{INDENT}mov result, al"
-    when SHORT_SIZE
-      file.puts "#{INDENT}#{INDENT}mov result, ax"
-    when POINTER_SIZE
-      file.puts "#{INDENT}#{INDENT}mov result, eax"
-    when INT_SIZE
-      file.puts "#{INDENT}#{INDENT}mov result, eax"
-    when LONG_LONG_SIZE
-      file.puts "#{INDENT}#{INDENT}lea ecx, result"
-      file.puts "#{INDENT}#{INDENT}mov [result], eax"
-      file.puts "#{INDENT}#{INDENT}mov [result+4], edx"
+    if api.ret[:float]
+        file.puts "#{INDENT}#{INDENT}fst result"
     else
-      err "Unknown size of #{arg[:size]}"
+      case api.ret[:size]
+      when VOID_SIZE
+      when BYTE_SIZE
+        file.puts "#{INDENT}#{INDENT}mov result, al"
+      when SHORT_SIZE
+        file.puts "#{INDENT}#{INDENT}mov result, ax"
+      when INT_SIZE
+        file.puts "#{INDENT}#{INDENT}mov result, eax"
+      when LONG_LONG_SIZE
+        file.puts "#{INDENT}#{INDENT}lea ecx, result"
+        file.puts "#{INDENT}#{INDENT}mov [ecx+0], eax"
+        file.puts "#{INDENT}#{INDENT}mov [ecx+4], edx"
+      else
+        err "Unknown size of #{api.ret[:size]}"
+      end
     end
     file.puts "#{INDENT}#{INDENT}// restore stack"
     file.puts "#{INDENT}#{INDENT}// including this pointer"
@@ -317,7 +326,6 @@ File.open(source, 'w') do |file|
     end
     #file.puts "#{INDENT}#{INDENT}
     file.puts "#{INDENT}}"
-    #file.puts "#{INDENT}#{INDENT}
     #file.puts "#{INDENT}
     file.puts "#{INDENT}return result;" unless api.ret[:size] == VOID_SIZE
     file.puts "}"
