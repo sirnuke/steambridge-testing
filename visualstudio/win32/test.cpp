@@ -38,7 +38,8 @@ int Test::function_one(int param_one, bool param_two, const char *param_three)
     // Push the parameters onto the stack
     mov eax, param_three
     push eax
-    mov eax, 0
+    // This is correct, bools (at least in GNU-land) are one byte and appear to consistently read 
+    // from the lowest byte
     mov al, param_two
     push eax
     mov eax, param_one
