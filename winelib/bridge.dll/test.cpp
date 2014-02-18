@@ -19,7 +19,7 @@ extern "C"
 
 Test::Test()
 {
-  WINE_TRACE("(this=%p)\n", this);
+  WINE_TRACE("(this=%p,vtable=%p,function_one=%p)\n", this, *((void **)(this)), &Test::function_one);
 }
 
 int Test::function_one(int param_one, bool param_two, const char *param_three)
@@ -30,7 +30,7 @@ int Test::function_one(int param_one, bool param_two, const char *param_three)
 
 bool Test::function_two(double param_one, void *param_two, float param_three)
 {
-  WINE_TRACE("(this=%p,%f,%p,%f)\n", this, param_one, param_two, param_three);
+  WINE_TRACE("(this=%p,%f|%i&%i,%p,%f)\n", this, param_one, param_one, param_two, param_three);
   return true;
 }
 
