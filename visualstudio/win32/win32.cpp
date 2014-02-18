@@ -15,6 +15,10 @@ int _tmain(int argc, _TCHAR* argv[])
   printf("function_one: %i\n", i);
   bool b = t.function_two(4.2e14, (void *)(0x100), 0.125f);
   printf("function_two: %i\n", b);
+  double d = t.function_three(256);
+  printf("function_three: %f\n", d);
+  unsigned __int64 u = t.function_four();
+  printf("function_four: %llu\n", u);
 	return 0;
 }
 

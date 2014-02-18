@@ -123,3 +123,80 @@ bool Test::function_two(double param_one, void *param_two, float param_three)
   }
   return result;
 }
+
+double Test::function_three(unsigned short param_one)
+{
+  printf("(this=0x%p,parent=0x%p,%hu)\n", this, this->parent, param_one);
+  double result;
+  __asm
+  {
+    mov ax, param_one
+    push eax
+    // get parent
+    mov eax, [this]
+    mov eax, [eax].parent
+    push eax
+    // Get vtable
+    mov eax, [eax]
+    mov eax, [eax+8]
+    call eax
+    fst result
+    pop eax
+    pop eax
+  }
+  return result;
+}
+
+unsigned __int64 Test::function_four()
+{
+  printf("(this=0x%p,parent=0x%p)\n", this, this->parent);
+  unsigned __int64 result;
+  __asm
+  {
+    // get parent
+    mov eax, [this]
+    mov eax, [eax].parent
+    push eax
+    // get vtable
+    mov eax, [eax]
+    mov eax, [eax+12]
+    call eax
+    // get the result
+    lea ecx, result
+    mov [ecx+0], eax
+    mov [ecx+8], edx
+    // cleanup the stack
+    pop eax
+  }
+  return result;
+}
+
+float Test::function_five(__int64 param_one)
+{
+  float result;
+  printf("(this=0x%p,parent=0x%p)\n", this, this->parent);
+  __asm
+  {
+    lea edx, param_one
+    mov eax, [edx+0]
+    push eax
+    mov eax, [edx+4]
+    push eax
+    // get parent
+    mov eax, [this]
+    mov eax, [eax].parent
+    push eax
+    // get vtable
+    mov eax, [eax]
+    mov eax, [eax+16]
+    call eax
+    // get the result
+    fst result
+    // cleanup the stack
+    pop eax
+    pop eax
+    pop eax
+  }
+
+  return result;
+}
