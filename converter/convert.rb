@@ -32,13 +32,16 @@ def describe(type)
     type.chomp!('*')
     pointer = true
   end
-  data = { :type => type, :printf => "%i", :size => INT_SIZE, :float => false, :const => false } 
+  data = { :type => type, :printf => "%i", :size => INT_SIZE, :float => false, :const => false, :default => nil }
   case type
   when 'constchar'
     data[:type] = 'const char'
     data[:const] = true
     data[:printf] = "\\\"%s\\\""
     data[:size] = BYTE_SIZE
+  when 'constvoid'
+    data[:type] = 'const void'
+    err "const void is expected to be a pointer" unless pointer or ppointer
   when 'constint32'
     data[:type] = 'const int32'
     data[:const] = true
@@ -64,7 +67,15 @@ def describe(type)
   when 'CSteamID' # effective uint64
     data[:printf] = "%llu"
     data[:size] = LONG_LONG_SIZE
-  when 'AppId_t' #uint32
+  when 'CGameID' # effective uint64
+    data[:printf] = "%llu"
+    data[:size] = LONG_LONG_SIZE
+  when 'HSteamUser' # int32
+  when 'HAuthTicket' # uint32
+    data[:printf] = "%u"
+  when 'AppId_t' # uint32
+    data[:printf] = "%u"
+  when 'DepotId_t' # uint32
     data[:printf] = "%u"
   when 'UGCHandle_t' # uint64
     data[:printf] = "%llu"
@@ -94,7 +105,7 @@ def describe(type)
     data[:float] = true
   else
     unless type.start_with? 'E' or type == 'int' or type == 'int32' 
-      warn "Possible unimplmented type of #{type}"
+      warn "Possible unimplemented type of #{type}"
     end
   end
   if pointer or ppointer
@@ -121,6 +132,7 @@ class API
     @name = nil
     @args = []
     arg = nil
+    hasdefault = false
     line.gsub!(/[\(\),;]/, ' ') # parans, commans, semicolons become a space
     line.gsub!(/ \*/, '* ') # collapse xyz * types
     line.gsub!(/\/\/.+/, '') # remove any trailing comments
@@ -135,7 +147,15 @@ class API
       elsif @name.nil?
         @name = token
       elsif arg.nil?
-        arg = token
+        # Yuck
+        if hasdefault
+          hasdefault = false
+          @args.last[:default] = token
+        elsif token == '='
+          hasdefault = true
+        else
+          arg = token
+        end
       else
         data = describe(arg)
         data[:name] = token
@@ -208,6 +228,8 @@ File.open(header, 'w') do |file|
   file.puts
   file.puts "#pragma once"
   file.puts
+  file.puts "#include \"types.h\""
+  file.puts
   file.puts "class ISteam#{name};"
   file.puts
   file.puts "class Steam#{name}"
@@ -222,6 +244,7 @@ File.open(header, 'w') do |file|
     api.args.each do |arg|
       file.print ", " unless arg == api.args.first
       file.print "#{arg[:type]}#{arg[:name]}"
+      file.print " = #{arg[:default]}" if arg[:default]
     end
     file.puts ");"
   end
