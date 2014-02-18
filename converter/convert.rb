@@ -71,6 +71,7 @@ def describe(type)
     data[:printf] = "%llu"
     data[:size] = LONG_LONG_SIZE
   when 'HSteamUser' # int32
+  when 'HSteamPipe' # int32
   when 'HAuthTicket' # uint32
     data[:printf] = "%u"
   when 'AppId_t' # uint32
