@@ -15,22 +15,23 @@ Test::Test() : parent(NULL)
 int Test::function_one(int param_one, bool param_two, const char *param_three)
 {
   int result = 0;
-  //const char *msg = "eax==%p\n";
+  //const char *msg = "%c--abcdefghijklmnopqrstuvwxyz1234567890\n";
   printf("(this=0x%p,parent=0x%p,%i,%i,\"%s\",%p)\n", this, parent, param_one, param_two, param_three, param_three);
-  /*  For reference, here's how to call printf
+  //For reference, here's how to call printf
+  /*
   __asm
   {
-    mov eax, this
-    push eax
-    //lea eax, msg
     mov eax, msg
+    mov dl, [eax + 16]
+    push edx
+    //mov eax, msg
     push eax
     call dword ptr[printf]
     pop eax
     pop ecx
   }
-  printf("Done with first assembler block\n");*/
-  
+  printf("Done with first assembler block\n");
+  */
   __asm
   {
     // Push this onto the stack
