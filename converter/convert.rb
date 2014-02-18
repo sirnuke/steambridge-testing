@@ -37,7 +37,7 @@ def describe(type)
   when 'constchar'
     data[:type] = 'const char'
     data[:const] = true
-    data[:printf] = "\"%s\""
+    data[:printf] = "\\\"%s\\\""
     data[:size] = 1
   when 'uint32'
     data[:printf] = "%u"
@@ -220,6 +220,8 @@ File.open(source, 'w') do |file|
   file.puts 
   file.puts "#include \"#{header}\""
   file.puts
+  file.puts "#include <steam_api_bridge.h>"
+  file.puts
   file.puts "#{define}Steam#{name}() : steam#{name}(NULL)"
   file.puts "{"
   file.puts "#{INDENT}__TRACE(\"(this=0x%p)\", this);"
@@ -289,7 +291,7 @@ File.open(source, 'w') do |file|
     err "Invalid stack size of #{stack}" if stack % POINTER_SIZE != 0
     file.puts "#{INDENT}#{INDENT}// Push Linux-side 'this'"
     file.puts "#{INDENT}#{INDENT}mov eax, [this]"
-    file.puts "#{INDENT}#{INDENT}mov eax, [eax].steam#{name}"
+    file.puts "#{INDENT}#{INDENT}mov eax, [eax]this.steam#{name}"
     file.puts "#{INDENT}#{INDENT}push eax"
     file.puts "#{INDENT}#{INDENT}// Get the vtable (pointer at this)"
     file.puts "#{INDENT}#{INDENT}mov eax, [eax]"
@@ -333,7 +335,7 @@ File.open(source, 'w') do |file|
     offset += POINTER_SIZE
   end
 
-  file.puts "#include \"#{name}_api_extra.cpp\""
+  file.puts "#include \"#{name.downcase}_api_code.inc\""
   file.puts
 end
 
