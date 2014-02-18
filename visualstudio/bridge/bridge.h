@@ -10,4 +10,7 @@
 #define BRIDGE_API __declspec(dllimport)
 #endif
 
+extern "C"
+{
 BRIDGE_API void *get_real_object();
+}

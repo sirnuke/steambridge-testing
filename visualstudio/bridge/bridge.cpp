@@ -4,7 +4,10 @@
 #include "stdafx.h"
 #include "bridge.h"
 
+extern "C"
+{
 void *get_real_object()
 {
   return NULL;
+}
 }

@@ -2,6 +2,9 @@
 Microsoft Visual Studio Solution File, Format Version 11.00
 # Visual C++ Express 2010
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "win32", "win32\win32.vcxproj", "{C399B1A2-A22B-41D8-BB4C-73DEA32774EC}"
+	ProjectSection(ProjectDependencies) = postProject
+		{ACC0E261-6658-4AD1-9A20-263B136F5C19} = {ACC0E261-6658-4AD1-9A20-263B136F5C19}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "bridge", "bridge\bridge.vcxproj", "{ACC0E261-6658-4AD1-9A20-263B136F5C19}"
 EndProject
