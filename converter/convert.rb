@@ -279,6 +279,7 @@ File.open(source, 'w') do |file|
         err "Unknown size of #{arg[:size]}"
       end
     end
+    err "Invalid stack size of #{stack}" if stack % POINTER_SIZE != 0
     file.puts "#{INDENT}#{INDENT}// Push Linux-side 'this'"
     file.puts "#{INDENT}#{INDENT}mov eax, [this]"
     file.puts "#{INDENT}#{INDENT}mov eax, [eax].steam#{name}"
@@ -307,6 +308,14 @@ File.open(source, 'w') do |file|
     else
       err "Unknown size of #{arg[:size]}"
     end
+    file.puts "#{INDENT}#{INDENT}// restore stack"
+    file.puts "#{INDENT}#{INDENT}// including this pointer"
+    file.puts "#{INDENT}#{INDENT}pop eax"
+    while stack > 0
+      file.puts "#{INDENT}#{INDENT}pop eax"
+      stack -= POINTER_SIZE
+    end
+    #file.puts "#{INDENT}#{INDENT}
     file.puts "#{INDENT}}"
     #file.puts "#{INDENT}#{INDENT}
     #file.puts "#{INDENT}
