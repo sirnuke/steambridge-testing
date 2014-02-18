@@ -5,3 +5,9 @@ visualstudio/ipch
 *.opensdf
 *.sdf
 *.suo
+visualstudio/Release
+visualstudio/win32/Release
+visualstudio/bridge/Release
+visualstudio/Debug
+visualstudio/win32/Debug
+visualstudio/bridge/Debug
