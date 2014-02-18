@@ -19,6 +19,8 @@ int _tmain(int argc, _TCHAR* argv[])
   printf("function_three: %f\n", d);
   unsigned __int64 u = t.function_four();
   printf("function_four: %llu\n", u);
+  float f = t.function_five(4294967306);
+  printf("function_five: %f\n", f);
 	return 0;
 }
 
