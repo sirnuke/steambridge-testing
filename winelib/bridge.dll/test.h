@@ -19,6 +19,14 @@ class Test
     virtual double function_three(unsigned short param_one);
     virtual uint64_t function_four();
     virtual float function_five(int64_t param_one);
+
+  private:
+    int one;
+    bool two;
+    double three;
+    uint64_t four;
+    float five;
+
 };
 
 
