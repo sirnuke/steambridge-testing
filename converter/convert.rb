@@ -32,7 +32,7 @@ def describe(type)
     type.chomp!('*')
     pointer = true
   end
-  data = { :type => type, :printf => "%i", :size => INT_SIZE, :float => false, :const => false, :default => nil }
+  data = { :type => type, :printf => "%i", :size => INT_SIZE, :float => false, :const => false, :default => nil , :struct => false }
   case type
   when 'constchar'
     data[:type] = 'const char'
@@ -67,9 +67,11 @@ def describe(type)
   when 'CSteamID' # effective uint64
     data[:printf] = "%llu"
     data[:size] = LONG_LONG_SIZE
+    data[:struct] = true
   when 'CGameID' # effective uint64
     data[:printf] = "%llu"
     data[:size] = LONG_LONG_SIZE
+    data[:struct] = true
   when 'HSteamUser' # int32
   when 'HSteamPipe' # int32
   when 'HAuthTicket' # uint32
@@ -315,6 +317,7 @@ File.open(source, 'w') do |file|
     file.puts "#{INDENT}__asm"
     file.puts "#{INDENT}{"
     stack = 0
+
     api.args.reverse_each do |arg|
       file.puts "#{INDENT}#{INDENT}// Push function arguments"
       case arg[:size]
@@ -348,6 +351,12 @@ File.open(source, 'w') do |file|
     file.puts "#{INDENT}#{INDENT}mov eax, [this]"
     file.puts "#{INDENT}#{INDENT}mov eax, [eax]this.steam#{name}"
     file.puts "#{INDENT}#{INDENT}push eax"
+    if api.ret[:struct]
+      file.puts "#{INDENT}#{INDENT}// Push hidden pointer to result struct"
+      file.puts "#{INDENT}#{INDENT}lea edx, result"
+      file.puts "#{INDENT}#{INDENT}push edx"
+      stack += POINTER_SIZE
+    end
     file.puts "#{INDENT}#{INDENT}// Get the vtable (pointer at this)"
     file.puts "#{INDENT}#{INDENT}mov eax, [eax]"
     file.puts "#{INDENT}#{INDENT}// Lookup the pointer in the vtable"
@@ -355,8 +364,10 @@ File.open(source, 'w') do |file|
     file.puts "#{INDENT}#{INDENT}// Call that memory location"
     file.puts "#{INDENT}#{INDENT}call eax"
     file.puts "#{INDENT}#{INDENT}// Move the returned value into the result"
-    if api.ret[:float]
-        file.puts "#{INDENT}#{INDENT}fst result"
+    if api.ret[:struct]
+      file.puts "#{INDENT}#{INDENT}// (Return value is a hidden struct, should already be set)"
+    elsif api.ret[:float]
+      file.puts "#{INDENT}#{INDENT}fst result"
     else
       case api.ret[:size]
       when VOID_SIZE
