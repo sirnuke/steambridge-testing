@@ -305,14 +305,12 @@ File.open(source, 'w') do |file|
     file.puts ");"
 
     if api.ret[:size] > VOID_SIZE
-      file.print "#{INDENT}"
-      # Thanks to the black magic of assembler, this might not be necesary
-      if api.ret[:type].match(/^const/)
-        file.print api.ret[:type].sub(/^const /, '')
+      if api.ret[:struct]
+        file.puts "#{INDENT}#{api.ret[:type]}data;"
+        file.puts "#{INDENT}#{api.ret[:type]}*result = &data;"
       else
-        file.print api.ret[:type]
+        file.puts "#{INDENT}#{api.ret[:type]}result;"
       end
-      file.puts "result;"
     end
     file.puts "#{INDENT}__asm"
     file.puts "#{INDENT}{"
@@ -351,11 +349,13 @@ File.open(source, 'w') do |file|
     file.puts "#{INDENT}#{INDENT}mov eax, [this]"
     file.puts "#{INDENT}#{INDENT}mov eax, [eax]this.steam#{name}"
     file.puts "#{INDENT}#{INDENT}push eax"
+    stack += POINTER_SIZE
     if api.ret[:struct]
       file.puts "#{INDENT}#{INDENT}// Push hidden pointer to result struct"
-      file.puts "#{INDENT}#{INDENT}lea edx, result"
+      file.puts "#{INDENT}#{INDENT}mov edx, result"
       file.puts "#{INDENT}#{INDENT}push edx"
-      stack += POINTER_SIZE
+      # GCC pops the hidden pointer in the function
+      # Why?  Because REASONS
     end
     file.puts "#{INDENT}#{INDENT}// Get the vtable (pointer at this)"
     file.puts "#{INDENT}#{INDENT}mov eax, [eax]"
@@ -386,16 +386,14 @@ File.open(source, 'w') do |file|
       end
     end
     file.puts "#{INDENT}#{INDENT}// restore stack"
-    file.puts "#{INDENT}#{INDENT}// including this pointer"
-    file.puts "#{INDENT}#{INDENT}pop eax"
-    while stack > 0
-      file.puts "#{INDENT}#{INDENT}pop eax"
-      stack -= POINTER_SIZE
-    end
-    #file.puts "#{INDENT}#{INDENT}
+    file.puts "#{INDENT}#{INDENT}add esp, #{stack}"
     file.puts "#{INDENT}}"
-    #file.puts "#{INDENT}
-    file.puts "#{INDENT}return result;" unless api.ret[:size] == VOID_SIZE
+    if api.ret[:struct]
+      file.puts "#{INDENT}__TRACE(\"Return value is #{api.ret[:printf]}\", data);"
+      file.puts "#{INDENT}return data;"
+    else
+      file.puts "#{INDENT}return result;" unless api.ret[:size] == VOID_SIZE
+    end
     file.puts "}"
     file.puts
     offset += POINTER_SIZE
